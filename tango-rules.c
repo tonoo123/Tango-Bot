@@ -15,15 +15,22 @@ uint64_t MOONS;
 uint64_t SUNS;
 uint64_t SUNS_MOONS_COMBINED;
 
-int startingSet[36];
-int count = 0;
+static int startingSet[36];
+static int count = 0;
 
 static inline int isLeftCol(int b) { return VERTICAL_LEFT_EDGE & (1 << b); };
 static inline int isRightCol(int b) { return VERTICAL_RIGHT_EDGE & (1 << b); };
 static inline int isTopRow(int b) { return HORIZONTAL_UP_EDGE & (1 << b); };
 static inline int isBottomRow(int b) { return HORIZONTAL_DOWN_EDGE & (1 << b); };
 
-int getVerticalLeft(int b)
+/**
+ * Checks for and returns the vertical dividor symbol to the left of a tile.
+ * @param b Bit position.
+ * @return 0 for no symbol,
+ *		   1 for cross,
+ *		   2 for equal.
+ */
+int getLeftSymbol(int b)
 {
 	int cross = (1 << b) & VERTICAL_DIVIDERS_CROSS;
 	int equal = (1 << b) & VERTICAL_DIVIDERS_EQUAL;
@@ -35,7 +42,14 @@ int getVerticalLeft(int b)
 		return 0;
 }
 
-int getVerticalRight(int b)
+/**
+ * Checks for and returns the vertical dividor symbol to the right of a tile.
+ * @param b Bit position.
+ * @return 0 for no symbol,
+ *		   1 for cross,
+ *		   2 for equal.
+ */
+int getRightSymbol(int b)
 {
 	int cross = (1 << (b-1)) & VERTICAL_DIVIDERS_CROSS;
 	int equal = (1 << (b-1)) & VERTICAL_DIVIDERS_EQUAL;
@@ -47,7 +61,14 @@ int getVerticalRight(int b)
 		return 0;
 }
 
-int getHorizontalUp(int b)
+/**
+ * Checks for and returns the horizontal dividor symbol above a tile.
+ * @param b Bit position.
+ * @return 0 for no symbol,
+ * 		   1 for cross,
+ * 		   2 for equal.
+ */
+int getAboveSymbol(int b)
 {
 	int cross = (1 << b) & HORIZONTAL_DIVIDERS_CROSS;
 	int equal = (1 << b) & HORIZONTAL_DIVIDERS_EQUAL;
@@ -59,7 +80,14 @@ int getHorizontalUp(int b)
 		return 0;
 }
 
-int getHorizontalDown(int b)
+/**
+ * Checks for and returns the horizontal dividor symbol below a tile.
+ * @param b Bit position
+ * @return 0 for no symbol,
+ * 		   1 for cross,
+ * 		   2 for equal.
+ */
+int getBelowSymbol(int b)
 {
 	int cross = (1 << (b-6)) & HORIZONTAL_DIVIDERS_CROSS;
 	int equal = (1 << (b-6)) & HORIZONTAL_DIVIDERS_EQUAL;
@@ -71,8 +99,63 @@ int getHorizontalDown(int b)
 		return 0;
 }
 
-int startingSetInsert(int b) { startingSet[count++] = b; }
+int getLeftTile(int b)
+{
+	int res = -1;
+	if ((MOONS >> (b+1)) & 1)
+		res = 0;
+	else if ((SUNS >> (b+1)) & 1)
+		res = 1;
+	
+	return res;
+}
 
+int getRightTile(int b)
+{
+	int res = -1;
+	if ((MOONS >> (b-1)) & 1)
+		res = 0;
+	else if ((SUNS >> (b-1)) & 1)
+		res = 1;
+	
+	return res;
+}
+
+int getAboveTile(int b)
+{
+	int res = -1;
+	if ((MOONS >> (b+6)) & 1)
+		res = 0;
+	else if ((SUNS >> (b+6)) & 1)
+		res = 1;
+	
+	return res;
+}
+
+int getBelowTile(int b)
+{
+	int res = -1;
+	if ((MOONS >> (b-6)) & 1)
+		res = 0;
+	else if ((SUNS >> (b-6)) & 1)
+		res = 1;
+	
+	return res;
+}
+
+/**
+ * Adds a bit position to the starting set.
+ * @param b Bit position to add.
+ * @return None
+ */
+void startingSetAdd(int b) { startingSet[count++] = b; }
+
+/**
+ * Determines if a bit position is part of the starting set.
+ * @param b Bit position.
+ * @return 0 if b is not in the starting set,
+ * 		   1 if it is.
+ */
 int startingSetContains(int b)
 {
 	int res = 0;
@@ -148,25 +231,71 @@ static int validCol(int type, int r, int c, int b)
 }
 
 /**
- * Checks if the placement of a sun or moon is valid in this tile. Returns false if 
- * this bit position is part of the starting set.
- * @param	int type: 0 for moon, 1 for sun.
- * @param	int b: bit position.
- * @return	int: 0 for invalid placement, -1 for starting set edit attempt, 1 for valid.
+ * Checks if the piece satisfies the symbols around the tile.
+ * @param type 0 for moon, 1 for sun.
+ * @param b	   Bit position.
+ * @return 0 if not satisfactory,
+ * 		   1 if it is.
+ */
+static int validSymbols(int type, int b)
+{
+	int res = 1;
+	
+	int symbol = getAboveSymbol(b);
+	int tile = getAboveTile(b);
+	if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+	{
+		res = 0;
+		goto exit;
+	}
+
+	symbol = getBelowSymbol(b);
+	tile = getBelowTile(b);
+	if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+	{
+		res = 0;
+		goto exit;
+	}
+
+	symbol = getLeftSymbol(b);
+	tile = getLeftTile(b);
+	if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+	{
+		res = 0;
+		goto exit;
+	}
+
+	symbol = getRightSymbol(b);
+	tile = getRightTile(b);
+	if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+		res = 0;
+
+exit:
+	return res;
+}
+
+/**
+ * Checks whether placing a sun or moon at the given bit position is valid.
+ * @param type 0 for moon, 1 for sun.
+ * @param b    Bit position.
+ * @return 0 if the placement is invalid,
+ *		  -1 if attempting to edit the starting set,
+ *		   1 if the placement is valid.
  */
 int isValid(int type, int b)
 {
-	int res;
+	int res = 1;
 
 	if (startingSetContains(b))
 	{
-		printf("Cannot change starting set.\n");
 		res = -1;
 		goto exit;
 	}
 
 	int col = b%6;
 	int row = b-col;
+	if (!validRow(type, col, b) || !validCol(type, row, col, b) || !validSymbols(type, b))
+		res = 0;
 
 exit:
 	return res;
@@ -177,7 +306,7 @@ int place(int type, int b)
 	return 0;
 }
 
-int remove(int type, int b)
+int remove(int b)
 {
 	return 0;
 }
