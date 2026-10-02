@@ -15,14 +15,15 @@ uint64_t MOONS;
 uint64_t SUNS;
 uint64_t SUNS_MOONS_COMBINED;
 
-static int startingSet[36];
-static int count = 0;
+static int startingTiles[36];
+static int tileCount = 0;
 
 static inline int isLeftCol(int b) { return VERTICAL_LEFT_EDGE & (1 << b); };
 static inline int isRightCol(int b) { return VERTICAL_RIGHT_EDGE & (1 << b); };
 static inline int isTopRow(int b) { return HORIZONTAL_UP_EDGE & (1 << b); };
 static inline int isBottomRow(int b) { return HORIZONTAL_DOWN_EDGE & (1 << b); };
 
+// TODO: Refactor to 1 exit point and exit early if top/bottom/right/leftmost
 /**
  * Checks for and returns the vertical dividor symbol to the left of a tile.
  * @param b Bit position.
@@ -32,8 +33,8 @@ static inline int isBottomRow(int b) { return HORIZONTAL_DOWN_EDGE & (1 << b); }
  */
 int getLeftSymbol(int b)
 {
-	int cross = (1 << b) & VERTICAL_DIVIDERS_CROSS;
-	int equal = (1 << b) & VERTICAL_DIVIDERS_EQUAL;
+	int cross = (1 << b) & HORIZONTAL_DIVIDERS_CROSS;
+	int equal = (1 << b) & HORIZONTAL_DIVIDERS_EQUAL;
 	if (cross)
 		return 1;
 	else if (equal)
@@ -51,8 +52,8 @@ int getLeftSymbol(int b)
  */
 int getRightSymbol(int b)
 {
-	int cross = (1 << (b-1)) & VERTICAL_DIVIDERS_CROSS;
-	int equal = (1 << (b-1)) & VERTICAL_DIVIDERS_EQUAL;
+	int cross = (1 << (b-1)) & HORIZONTAL_DIVIDERS_CROSS;
+	int equal = (1 << (b-1)) & HORIZONTAL_DIVIDERS_EQUAL;
 	if (cross)
 		return 1;
 	else if (equal)
@@ -70,8 +71,8 @@ int getRightSymbol(int b)
  */
 int getAboveSymbol(int b)
 {
-	int cross = (1 << b) & HORIZONTAL_DIVIDERS_CROSS;
-	int equal = (1 << b) & HORIZONTAL_DIVIDERS_EQUAL;
+	int cross = (1 << b) & VERTICAL_DIVIDERS_CROSS;
+	int equal = (1 << b) & VERTICAL_DIVIDERS_EQUAL;
 	if (cross)
 		return 1;
 	else if (equal)
@@ -89,8 +90,8 @@ int getAboveSymbol(int b)
  */
 int getBelowSymbol(int b)
 {
-	int cross = (1 << (b-6)) & HORIZONTAL_DIVIDERS_CROSS;
-	int equal = (1 << (b-6)) & HORIZONTAL_DIVIDERS_EQUAL;
+	int cross = (1 << (b-6)) & VERTICAL_DIVIDERS_CROSS;
+	int equal = (1 << (b-6)) & VERTICAL_DIVIDERS_EQUAL;
 	if (cross)
 		return 1;
 	else if (equal)
@@ -98,7 +99,7 @@ int getBelowSymbol(int b)
 	else
 		return 0;
 }
-
+// END TODO
 int getLeftTile(int b)
 {
 	int res = -1;
@@ -144,11 +145,20 @@ int getBelowTile(int b)
 }
 
 /**
- * Adds a bit position to the starting set.
+ * Adds a bit position to the starting set. Also updates bitboards.
+ * @param type 0 for moon, 1 for sun.
  * @param b Bit position to add.
  * @return None
  */
-void startingSetAdd(int b) { startingSet[count++] = b; }
+void startingTileAdd(int type, int b)
+{ 
+	startingTiles[tileCount++] = b;
+	if (type)
+		SUNS |= (1 << b);
+	else
+		MOONS |= (1 << b);
+	SUNS_MOONS_COMBINED |= (1 << b);
+}
 
 /**
  * Determines if a bit position is part of the starting set.
@@ -156,18 +166,48 @@ void startingSetAdd(int b) { startingSet[count++] = b; }
  * @return 0 if b is not in the starting set,
  * 		   1 if it is.
  */
-int startingSetContains(int b)
+int startingTileContains(int b)
 {
 	int res = 0;
-	for (int i=0; i < count; i++)
+	for (int i=0; i < tileCount; i++)
 	{
-		if (startingSet[i] == b)
+		if (startingTiles[i] == b)
 		{
 			res = 1;
 			break;
 		}
 	}
 	return res;
+}
+
+/**
+ * Adds a symbol to the board. Updates bitboards. Bit position is the tile
+ * to the right of the symbol.
+ * @param type 0 for cross, 1 for equal.
+ * @param b Bit position.
+ * @return None
+ */
+void horizontalSymbolAdd(int type, int b)
+{
+	if (type)
+		HORIZONTAL_DIVIDERS_EQUAL |= (1 << b);
+	else
+		HORIZONTAL_DIVIDERS_CROSS |= (1 << b);
+}
+
+/**
+ * Adds a symbol to the board. Updates bitboards. Bit position is the tile
+ * above the symbol.
+ * @param type 0 for cross, 1 for equal.
+ * @param b Bit position.
+ * @return None
+ */
+void verticalSymbolAdd(int type, int b)
+{
+	if (type)
+		VERTICAL_DIVIDERS_EQUAL |= (1 << b);
+	else
+		VERTICAL_DIVIDERS_CROSS |= (1 << b);
 }
 
 static int validRow(int type, int c, int b)
