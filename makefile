@@ -1,5 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -Iinclude
+LDFLAGS = -lgdi32 -luser32
 
 TARGETS = bot.exe test.exe
 
@@ -13,7 +14,7 @@ default: all
 all: $(TARGETS)
 
 bot.exe: $(BOT_OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 test.exe: $(TEST_OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
