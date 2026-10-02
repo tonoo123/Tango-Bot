@@ -2,21 +2,19 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-uint64_t VERTICAL_LEFT_EDGE		= 0x0000000820820820ULL;
-uint64_t VERTICAL_RIGHT_EDGE	= 0x0000000041041041ULL;
-uint64_t HORIZONTAL_UP_EDGE		= 0x0000000fc0000000ULL;
-uint64_t HORIZONTAL_DOWN_EDGE	= 0x000000000000003fULL;
+uint64_t VERTICAL_LEFT_EDGE			= 0x0000000820820820ULL;
+uint64_t VERTICAL_RIGHT_EDGE		= 0x0000000041041041ULL;
+uint64_t HORIZONTAL_UP_EDGE			= 0x0000000fc0000000ULL;
+uint64_t HORIZONTAL_DOWN_EDGE		= 0x000000000000003fULL;
 
-uint64_t HORIZONTAL_DIVIDERS_CROSS;
-uint64_t HORIZONTAL_DIVIDERS_EQUAL;
-uint64_t VERTICAL_DIVIDERS_CROSS;
-uint64_t VERTICAL_DIVIDERS_EQUAL;
-uint64_t MOONS;
-uint64_t SUNS;
-uint64_t SUNS_MOONS_COMBINED;
-
-static int startingTiles[36];
-static int tileCount = 0;
+uint64_t HORIZONTAL_DIVIDERS_CROSS	= 0x0ULL;
+uint64_t HORIZONTAL_DIVIDERS_EQUAL	= 0x0ULL;
+uint64_t VERTICAL_DIVIDERS_CROSS	= 0x0ULL;
+uint64_t VERTICAL_DIVIDERS_EQUAL	= 0x0ULL;
+uint64_t MOONS						= 0x0ULL;
+uint64_t SUNS						= 0x0ULL;
+uint64_t SUNS_MOONS_COMBINED		= 0x0ULL;
+uint64_t STARTING_SET				= 0x0ULL;
 
 static inline int isLeftCol(int b) { return VERTICAL_LEFT_EDGE & (1 << b); };
 static inline int isRightCol(int b) { return VERTICAL_RIGHT_EDGE & (1 << b); };
@@ -176,12 +174,12 @@ int getBelowTile(int b)
  */
 void startingTileAdd(int type, int b)
 { 
-	startingTiles[tileCount++] = b;
 	if (type)
 		SUNS |= (1 << b);
 	else
 		MOONS |= (1 << b);
 	SUNS_MOONS_COMBINED |= (1 << b);
+	STARTING_SET 		|= (1 << b);
 }
 
 /**
@@ -193,14 +191,8 @@ void startingTileAdd(int type, int b)
 int startingTileContains(int b)
 {
 	int res = 0;
-	for (int i=0; i < tileCount; i++)
-	{
-		if (startingTiles[i] == b)
-		{
-			res = 1;
-			break;
-		}
-	}
+	if (STARTING_SET & (1 << b))
+		res = 1;
 	return res;
 }
 
