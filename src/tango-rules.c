@@ -7,14 +7,14 @@ uint64_t VERTICAL_RIGHT_EDGE		= 0x0000000041041041ULL;
 uint64_t HORIZONTAL_UP_EDGE			= 0x0000000fc0000000ULL;
 uint64_t HORIZONTAL_DOWN_EDGE		= 0x000000000000003fULL;
 
-uint64_t HORIZONTAL_DIVIDERS_CROSS	= 0x0ULL;
-uint64_t HORIZONTAL_DIVIDERS_EQUAL	= 0x0ULL;
-uint64_t VERTICAL_DIVIDERS_CROSS	= 0x0ULL;
-uint64_t VERTICAL_DIVIDERS_EQUAL	= 0x0ULL;
-uint64_t MOONS						= 0x0ULL;
-uint64_t SUNS						= 0x0ULL;
-uint64_t SUNS_MOONS_COMBINED		= 0x0ULL;
-uint64_t STARTING_SET				= 0x0ULL;
+uint64_t HORIZONTAL_DIVIDERS_CROSS	= 0x0000000000000000ULL;
+uint64_t HORIZONTAL_DIVIDERS_EQUAL	= 0x0000000000000000ULL;
+uint64_t VERTICAL_DIVIDERS_CROSS	= 0x0000000000000000ULL;
+uint64_t VERTICAL_DIVIDERS_EQUAL	= 0x0000000000000000ULL;
+uint64_t MOONS						= 0x0000000000000000ULL;
+uint64_t SUNS						= 0x0000000000000000ULL;
+uint64_t SUNS_MOONS_COMBINED		= 0x0000000000000000ULL;
+uint64_t STARTING_SET				= 0x0000000000000000ULL;
 
 static inline int isLeftCol(int b) { return VERTICAL_LEFT_EDGE & (1 << b); };
 static inline int isRightCol(int b) { return VERTICAL_RIGHT_EDGE & (1 << b); };
@@ -356,13 +356,45 @@ int isValid(int type, int b)
 exit:
 	return res;
 }
-
+/**
+ * Places a piece on the board.
+ * @param type 0 for moon, 1 for sun.
+ * @param b Bit position.
+ * @return 1 on success, 0 on failure.
+ */
 int placePiece(int type, int b)
 {
-	return 0;
+	int res = 0;
+	if (isValid(type, b) == 1)
+	{
+		if (type)
+			SUNS |= (1 << b);
+		else
+			MOONS |= (1 << b);
+		SUNS_MOONS_COMBINED |= (1 << b);
+		res = 1;
+	}
+	
+	return res;
 }
 
+/**
+ * Removes a piece from the board.
+ * @param b Bit position.
+ * @return 1 on success, 0 on failure.
+ */
 int removePiece(int b)
 {
-	return 0;
+	int res = 0;
+	if (!startingTileContains(b))
+	{
+		uint64_t mask = 1 << b;
+		if (SUNS & mask)
+			SUNS &= ~mask;
+		else
+			MOONS &= ~mask;
+		SUNS_MOONS_COMBINED &= ~mask;
+		res = 1;
+	}
+	return res;
 }
