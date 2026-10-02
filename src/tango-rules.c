@@ -301,12 +301,12 @@ exit:
 	return res;
 }
 
-int place(int type, int b)
+int placePiece(int type, int b)
 {
 	return 0;
 }
 
-int remove(int b)
+int removePiece(int b)
 {
 	return 0;
 }
