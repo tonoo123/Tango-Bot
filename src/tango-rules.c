@@ -33,14 +33,20 @@ static inline int isBottomRow(int b) { return HORIZONTAL_DOWN_EDGE & (1 << b); }
  */
 int getLeftSymbol(int b)
 {
+	int res = 0;
+	if (isLeftCol(b))
+		goto exit;
 	int cross = (1 << b) & HORIZONTAL_DIVIDERS_CROSS;
 	int equal = (1 << b) & HORIZONTAL_DIVIDERS_EQUAL;
 	if (cross)
-		return 1;
+	{
+		res = 1;
+		goto exit;
+	}
 	else if (equal)
-		return 2;
-	else
-		return 0;
+		res = 2;
+exit:
+	return res;
 }
 
 /**
@@ -52,14 +58,20 @@ int getLeftSymbol(int b)
  */
 int getRightSymbol(int b)
 {
+	int res = 0;
+	if (isRightCol(b))
+		goto exit;
 	int cross = (1 << (b-1)) & HORIZONTAL_DIVIDERS_CROSS;
 	int equal = (1 << (b-1)) & HORIZONTAL_DIVIDERS_EQUAL;
 	if (cross)
-		return 1;
+	{
+		res = 1;
+		goto exit;
+	}
 	else if (equal)
-		return 2;
-	else
-		return 0;
+		res = 2;
+exit:
+	return res;
 }
 
 /**
@@ -71,14 +83,20 @@ int getRightSymbol(int b)
  */
 int getAboveSymbol(int b)
 {
+	int res = 0;
+	if (isTopRow(b))
+		goto exit;
 	int cross = (1 << b) & VERTICAL_DIVIDERS_CROSS;
 	int equal = (1 << b) & VERTICAL_DIVIDERS_EQUAL;
 	if (cross)
-		return 1;
+	{
+		res = 1;
+		goto exit;
+	}
 	else if (equal)
-		return 2;
-	else
-		return 0;
+		res = 2;
+exit:
+	return res;
 }
 
 /**
@@ -90,14 +108,20 @@ int getAboveSymbol(int b)
  */
 int getBelowSymbol(int b)
 {
+	int res = 0;
+	if (isBottomRow(b))
+		goto exit;
 	int cross = (1 << (b-6)) & VERTICAL_DIVIDERS_CROSS;
 	int equal = (1 << (b-6)) & VERTICAL_DIVIDERS_EQUAL;
 	if (cross)
-		return 1;
+	{
+		res = 1;
+		goto exit;
+	}
 	else if (equal)
-		return 2;
-	else
-		return 0;
+		res = 2;
+exit:
+	return res;
 }
 // END TODO
 int getLeftTile(int b)
