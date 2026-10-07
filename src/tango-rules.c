@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-uint64_t VERTICAL_LEFT_EDGE			= 0x0000000820820820ULL;
-uint64_t VERTICAL_RIGHT_EDGE		= 0x0000000041041041ULL;
-uint64_t HORIZONTAL_UP_EDGE			= 0x0000000fc0000000ULL;
-uint64_t HORIZONTAL_DOWN_EDGE		= 0x000000000000003fULL;
+uint64_t LEFT_EDGE					= 0x0000000820820820ULL;
+uint64_t RIGHT_EDGE					= 0x0000000041041041ULL;
+uint64_t TOP_EDGE					= 0x0000000fc0000000ULL;
+uint64_t BOTTOM_EDGE				= 0x000000000000003fULL;
 
 uint64_t HORIZONTAL_DIVIDERS_CROSS	= 0x0000000000000000ULL;
 uint64_t HORIZONTAL_DIVIDERS_EQUAL	= 0x0000000000000000ULL;
@@ -16,12 +16,11 @@ uint64_t SUNS						= 0x0000000000000000ULL;
 uint64_t SUNS_MOONS_COMBINED		= 0x0000000000000000ULL;
 uint64_t STARTING_SET				= 0x0000000000000000ULL;
 
-static inline int isLeftCol(int b) { return VERTICAL_LEFT_EDGE & (1 << b); };
-static inline int isRightCol(int b) { return VERTICAL_RIGHT_EDGE & (1 << b); };
-static inline int isTopRow(int b) { return HORIZONTAL_UP_EDGE & (1 << b); };
-static inline int isBottomRow(int b) { return HORIZONTAL_DOWN_EDGE & (1 << b); };
+static inline uint64_t isLeftCol(int b) { return LEFT_EDGE & (1ULL << b); };
+static inline uint64_t isRightCol(int b) { return RIGHT_EDGE & (1ULL << b); };
+static inline uint64_t isTopRow(int b) { return TOP_EDGE & (1ULL << b); };
+static inline uint64_t isBottomRow(int b) { return BOTTOM_EDGE & (1ULL << b); };
 
-// TODO: Refactor to 1 exit point and exit early if top/bottom/right/leftmost
 /**
  * Checks for and returns the vertical dividor symbol to the left of a tile.
  * @param b Bit position.
@@ -34,8 +33,8 @@ int getLeftSymbol(int b)
 	int res = 0;
 	if (isLeftCol(b))
 		goto exit;
-	int cross = (1 << b) & HORIZONTAL_DIVIDERS_CROSS;
-	int equal = (1 << b) & HORIZONTAL_DIVIDERS_EQUAL;
+	uint64_t cross = (1ULL << b) & HORIZONTAL_DIVIDERS_CROSS;
+	uint64_t equal = (1ULL << b) & HORIZONTAL_DIVIDERS_EQUAL;
 	if (cross)
 	{
 		res = 1;
@@ -59,8 +58,8 @@ int getRightSymbol(int b)
 	int res = 0;
 	if (isRightCol(b))
 		goto exit;
-	int cross = (1 << (b-1)) & HORIZONTAL_DIVIDERS_CROSS;
-	int equal = (1 << (b-1)) & HORIZONTAL_DIVIDERS_EQUAL;
+	uint64_t cross = (1ULL << (b-1)) & HORIZONTAL_DIVIDERS_CROSS;
+	uint64_t equal = (1ULL << (b-1)) & HORIZONTAL_DIVIDERS_EQUAL;
 	if (cross)
 	{
 		res = 1;
@@ -84,8 +83,8 @@ int getAboveSymbol(int b)
 	int res = 0;
 	if (isTopRow(b))
 		goto exit;
-	int cross = (1 << b) & VERTICAL_DIVIDERS_CROSS;
-	int equal = (1 << b) & VERTICAL_DIVIDERS_EQUAL;
+	uint64_t cross = (1ULL << b) & VERTICAL_DIVIDERS_CROSS;
+	uint64_t equal = (1ULL << b) & VERTICAL_DIVIDERS_EQUAL;
 	if (cross)
 	{
 		res = 1;
@@ -109,8 +108,8 @@ int getBelowSymbol(int b)
 	int res = 0;
 	if (isBottomRow(b))
 		goto exit;
-	int cross = (1 << (b-6)) & VERTICAL_DIVIDERS_CROSS;
-	int equal = (1 << (b-6)) & VERTICAL_DIVIDERS_EQUAL;
+	uint64_t cross = (1ULL << (b-6)) & VERTICAL_DIVIDERS_CROSS;
+	uint64_t equal = (1ULL << (b-6)) & VERTICAL_DIVIDERS_EQUAL;
 	if (cross)
 	{
 		res = 1;
@@ -121,7 +120,17 @@ int getBelowSymbol(int b)
 exit:
 	return res;
 }
-// END TODO
+
+int getTile(int b)
+{
+	int res = -1;
+	if ((MOONS >> b) & 1)
+		res = 0;
+	else if ((SUNS >> b) & 1)
+		res = 1;
+	return res;
+}
+
 int getLeftTile(int b)
 {
 	int res = -1;
@@ -129,7 +138,6 @@ int getLeftTile(int b)
 		res = 0;
 	else if ((SUNS >> (b+1)) & 1)
 		res = 1;
-	
 	return res;
 }
 
@@ -140,7 +148,6 @@ int getRightTile(int b)
 		res = 0;
 	else if ((SUNS >> (b-1)) & 1)
 		res = 1;
-	
 	return res;
 }
 
@@ -151,7 +158,6 @@ int getAboveTile(int b)
 		res = 0;
 	else if ((SUNS >> (b+6)) & 1)
 		res = 1;
-	
 	return res;
 }
 
@@ -162,7 +168,6 @@ int getBelowTile(int b)
 		res = 0;
 	else if ((SUNS >> (b-6)) & 1)
 		res = 1;
-	
 	return res;
 }
 
@@ -175,11 +180,11 @@ int getBelowTile(int b)
 void startingTileAdd(int type, int b)
 { 
 	if (type)
-		SUNS |= (1 << b);
+		SUNS |= (1ULL << b);
 	else
-		MOONS |= (1 << b);
-	SUNS_MOONS_COMBINED |= (1 << b);
-	STARTING_SET 		|= (1 << b);
+		MOONS |= (1ULL << b);
+	SUNS_MOONS_COMBINED |= (1ULL << b);
+	STARTING_SET 		|= (1ULL << b);
 }
 
 /**
@@ -191,7 +196,7 @@ void startingTileAdd(int type, int b)
 int startingTileContains(int b)
 {
 	int res = 0;
-	if (STARTING_SET & (1 << b))
+	if (STARTING_SET & (1ULL << b))
 		res = 1;
 	return res;
 }
@@ -206,9 +211,9 @@ int startingTileContains(int b)
 void horizontalSymbolAdd(int type, int b)
 {
 	if (type)
-		HORIZONTAL_DIVIDERS_EQUAL |= (1 << b);
+		HORIZONTAL_DIVIDERS_EQUAL |= (1ULL << b);
 	else
-		HORIZONTAL_DIVIDERS_CROSS |= (1 << b);
+		HORIZONTAL_DIVIDERS_CROSS |= (1ULL << b);
 }
 
 /**
@@ -221,9 +226,9 @@ void horizontalSymbolAdd(int type, int b)
 void verticalSymbolAdd(int type, int b)
 {
 	if (type)
-		VERTICAL_DIVIDERS_EQUAL |= (1 << b);
+		VERTICAL_DIVIDERS_EQUAL |= (1ULL << b);
 	else
-		VERTICAL_DIVIDERS_CROSS |= (1 << b);
+		VERTICAL_DIVIDERS_CROSS |= (1ULL << b);
 }
 
 static int validRow(int type, int c, int b)
@@ -233,12 +238,12 @@ static int validRow(int type, int c, int b)
 	if (!type)
 		like = MOONS;
 
-	int nextTile		= (like >> (b+1)) & 1;
-	int prevTile		= (like >> (b-1)) & 1;
-	int tileAfterNext	= (like >> (b+2)) & 1;
-	int tileBeforePrev	= (like >> (b-2)) & 1;
+	uint64_t nextTile		= (like >> (b+1)) & 1;
+	uint64_t prevTile		= (like >> (b-1)) & 1;
+	uint64_t tileAfterNext	= (like >> (b+2)) & 1;
+	uint64_t tileBeforePrev	= (like >> (b-2)) & 1;
 
-	int range = (like << 58 - (30 - (b-c))) >> 58;
+	uint64_t range = (like << (58 - (30 - (b-c)))) >> 58;
 	int sum = __builtin_popcountll(range);
 
 	if (
@@ -261,10 +266,10 @@ static int validCol(int type, int r, int c, int b)
 	if (!type)
 		like = MOONS;
 
-	int aboveTile		= (like >> (b +6)) & 1;
-	int belowTile		= (like >> (b -6)) & 1;
-	int tileAboveAbove	= (like >> (b+12)) & 1;
-	int tileBelowBelow	= (like >> (b-12)) & 1;
+	uint64_t aboveTile		= (like >> (b +6)) & 1;
+	uint64_t belowTile		= (like >> (b -6)) & 1;
+	uint64_t tileAboveAbove	= (like >> (b+12)) & 1;
+	uint64_t tileBelowBelow	= (like >> (b-12)) & 1;
 	int sum =
 		  ((like >> c)      & 1)
 		+ ((like >> (c+6))  & 1)
@@ -342,7 +347,7 @@ int isValid(int type, int b)
 {
 	int res = 1;
 
-	if (startingSetContains(b))
+	if (startingTileContains(b))
 	{
 		res = -1;
 		goto exit;
@@ -356,8 +361,9 @@ int isValid(int type, int b)
 exit:
 	return res;
 }
+
 /**
- * Places a piece on the board.
+ * Places a piece on the board. Updates bitboards.
  * @param type 0 for moon, 1 for sun.
  * @param b Bit position.
  * @return 1 on success, 0 on failure.
@@ -368,10 +374,10 @@ int placePiece(int type, int b)
 	if (isValid(type, b) == 1)
 	{
 		if (type)
-			SUNS |= (1 << b);
+			SUNS |= (1ULL << b);
 		else
-			MOONS |= (1 << b);
-		SUNS_MOONS_COMBINED |= (1 << b);
+			MOONS |= (1ULL << b);
+		SUNS_MOONS_COMBINED |= (1ULL << b);
 		res = 1;
 	}
 	
@@ -388,7 +394,7 @@ int removePiece(int b)
 	int res = 0;
 	if (!startingTileContains(b))
 	{
-		uint64_t mask = 1 << b;
+		uint64_t mask = 1ULL << b;
 		if (SUNS & mask)
 			SUNS &= ~mask;
 		else
@@ -397,4 +403,70 @@ int removePiece(int b)
 		res = 1;
 	}
 	return res;
+}
+
+void printVerticalSymbols(int msb)
+{
+	for (int i = msb; i >= (msb-5); i--)
+	{
+		int sym = getAboveSymbol(i);
+		switch (sym)
+		{
+			case 0:
+				printf("  ");
+				break;
+			case 1:
+				printf("x ");
+				break;
+			case 2:
+				printf("= ");
+				break;
+		}
+	}
+}
+
+void printBoard()
+{
+	for (int i=35; i >= 0; i--)
+	{
+		// Print symbol to left (if valid)
+		if (!isLeftCol(i))
+		{
+			int sym = getLeftSymbol(i);
+			switch (sym)
+			{
+				case 0:
+					printf(" ");
+					break;
+				case 1:
+					printf("x");
+					break;
+				case 2:
+					printf("=");
+					break;
+			}
+		}
+		// Print piece
+		int piece = getTile(i);
+		switch (piece)
+		{
+			case -1:
+				printf("0");
+				break;
+			case 0:
+				printf("m");
+				break;
+			case 1:
+				printf("s");
+				break;
+		}
+		// Print symbols below
+		if (isRightCol(i) && i != 0)
+		{
+			printf("\n");
+			printVerticalSymbols(i-1);
+			printf("\n");
+		}
+
+	}
 }

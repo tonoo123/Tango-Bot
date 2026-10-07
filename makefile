@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude
+CFLAGS = -Wall -Wextra -Iinclude -g
 LDFLAGS = -lgdi32 -luser32
 
 TARGETS = bot.exe test.exe
