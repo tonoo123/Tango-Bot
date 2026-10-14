@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include "tango-rules.h"
 
 uint64_t LEFT_EDGE					= 0x0000000820820820ULL;
 uint64_t RIGHT_EDGE					= 0x0000000041041041ULL;
@@ -16,6 +17,8 @@ uint64_t SUNS						= 0x0000000000000000ULL;
 uint64_t SUNS_MOONS_COMBINED		= 0x0000000000000000ULL;
 uint64_t STARTING_SET				= 0x0000000000000000ULL;
 
+uint64_t bbs[12];
+
 static inline uint64_t isLeftCol(int b) { return LEFT_EDGE & (1ULL << b); };
 static inline uint64_t isRightCol(int b) { return RIGHT_EDGE & (1ULL << b); };
 static inline uint64_t isTopRow(int b) { return TOP_EDGE & (1ULL << b); };
@@ -24,24 +27,24 @@ static inline uint64_t isBottomRow(int b) { return BOTTOM_EDGE & (1ULL << b); };
 /**
  * Checks for and returns the vertical dividor symbol to the left of a tile.
  * @param b Bit position.
- * @return 0 for no symbol,
- *		   1 for cross,
- *		   2 for equal.
+ * @return -1 for no symbol,
+ *		    0 for cross,
+ *		    1 for equal.
  */
 int getLeftSymbol(int b)
 {
-	int res = 0;
+	int res = -1;
 	if (isLeftCol(b))
 		goto exit;
 	uint64_t cross = (1ULL << b) & HORIZONTAL_DIVIDERS_CROSS;
 	uint64_t equal = (1ULL << b) & HORIZONTAL_DIVIDERS_EQUAL;
 	if (cross)
 	{
-		res = 1;
+		res = 0;
 		goto exit;
 	}
 	else if (equal)
-		res = 2;
+		res = 1;
 exit:
 	return res;
 }
@@ -49,24 +52,24 @@ exit:
 /**
  * Checks for and returns the vertical dividor symbol to the right of a tile.
  * @param b Bit position.
- * @return 0 for no symbol,
- *		   1 for cross,
- *		   2 for equal.
+ * @return -1 for no symbol,
+ *		    0 for cross,
+ *		    1 for equal.
  */
 int getRightSymbol(int b)
 {
-	int res = 0;
+	int res = -1;
 	if (isRightCol(b))
 		goto exit;
 	uint64_t cross = (1ULL << (b-1)) & HORIZONTAL_DIVIDERS_CROSS;
 	uint64_t equal = (1ULL << (b-1)) & HORIZONTAL_DIVIDERS_EQUAL;
 	if (cross)
 	{
-		res = 1;
+		res = 0;
 		goto exit;
 	}
 	else if (equal)
-		res = 2;
+		res = 1;
 exit:
 	return res;
 }
@@ -74,24 +77,24 @@ exit:
 /**
  * Checks for and returns the horizontal dividor symbol above a tile.
  * @param b Bit position.
- * @return 0 for no symbol,
- * 		   1 for cross,
- * 		   2 for equal.
+ * @return -1 for no symbol,
+ * 		    0 for cross,
+ * 		    1 for equal.
  */
 int getAboveSymbol(int b)
 {
-	int res = 0;
+	int res = -1;
 	if (isTopRow(b))
 		goto exit;
 	uint64_t cross = (1ULL << b) & VERTICAL_DIVIDERS_CROSS;
 	uint64_t equal = (1ULL << b) & VERTICAL_DIVIDERS_EQUAL;
 	if (cross)
 	{
-		res = 1;
+		res = 0;
 		goto exit;
 	}
 	else if (equal)
-		res = 2;
+		res = 1;
 exit:
 	return res;
 }
@@ -99,24 +102,24 @@ exit:
 /**
  * Checks for and returns the horizontal dividor symbol below a tile.
  * @param b Bit position
- * @return 0 for no symbol,
- * 		   1 for cross,
- * 		   2 for equal.
+ * @return -1 for no symbol,
+ * 		    0 for cross,
+ * 		    1 for equal.
  */
 int getBelowSymbol(int b)
 {
-	int res = 0;
+	int res = -1;
 	if (isBottomRow(b))
 		goto exit;
 	uint64_t cross = (1ULL << (b-6)) & VERTICAL_DIVIDERS_CROSS;
 	uint64_t equal = (1ULL << (b-6)) & VERTICAL_DIVIDERS_EQUAL;
 	if (cross)
 	{
-		res = 1;
+		res = 0;
 		goto exit;
 	}
 	else if (equal)
-		res = 2;
+		res = 1;
 exit:
 	return res;
 }
@@ -304,32 +307,44 @@ static int validSymbols(int type, int b)
 	
 	int symbol = getAboveSymbol(b);
 	int tile = getAboveTile(b);
-	if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+	if (tile >= 0)
 	{
-		res = 0;
-		goto exit;
+		if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+		{
+			res = 0;
+			goto exit;
+		}
 	}
 
 	symbol = getBelowSymbol(b);
 	tile = getBelowTile(b);
-	if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+	if (tile >= 0)
 	{
-		res = 0;
-		goto exit;
+		if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+		{
+			res = 0;
+			goto exit;
+		}
 	}
 
 	symbol = getLeftSymbol(b);
 	tile = getLeftTile(b);
-	if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+	if (tile >= 0)
 	{
-		res = 0;
-		goto exit;
+		if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+		{
+			res = 0;
+			goto exit;
+		}
 	}
 
 	symbol = getRightSymbol(b);
 	tile = getRightTile(b);
-	if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
-		res = 0;
+	if (tile >= 0)
+	{
+		if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+			res = 0;
+	}
 
 exit:
 	return res;
@@ -405,6 +420,23 @@ int removePiece(int b)
 	return res;
 }
 
+uint64_t *getBBs()
+{
+	bbs[0]  = LEFT_EDGE;
+	bbs[1]  = RIGHT_EDGE;
+	bbs[2]  = TOP_EDGE;
+	bbs[3]  = BOTTOM_EDGE;
+	bbs[4]  = HORIZONTAL_DIVIDERS_CROSS;
+	bbs[5]  = HORIZONTAL_DIVIDERS_EQUAL;
+	bbs[6]  = VERTICAL_DIVIDERS_CROSS;
+	bbs[7]  = VERTICAL_DIVIDERS_EQUAL;
+	bbs[8]  = MOONS;
+	bbs[9]  = SUNS;
+	bbs[10] = SUNS_MOONS_COMBINED;
+	bbs[11] = STARTING_SET;
+	return bbs;
+}
+
 void printVerticalSymbols(int msb)
 {
 	for (int i = msb; i >= (msb-5); i--)
@@ -427,6 +459,7 @@ void printVerticalSymbols(int msb)
 
 void printBoard()
 {
+	printf("\n");
 	for (int i=35; i >= 0; i--)
 	{
 		// Print symbol to left (if valid)
@@ -467,6 +500,6 @@ void printBoard()
 			printVerticalSymbols(i-1);
 			printf("\n");
 		}
-
 	}
+	printf("\n\n");
 }
