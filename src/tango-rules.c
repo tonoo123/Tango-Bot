@@ -309,7 +309,7 @@ static int validSymbols(int type, int b)
 	int tile = getAboveTile(b);
 	if (tile >= 0)
 	{
-		if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+		if ( (symbol == 0 && (tile == type)) || (symbol == 1 && (tile != type)) )
 		{
 			res = 0;
 			goto exit;
@@ -320,7 +320,7 @@ static int validSymbols(int type, int b)
 	tile = getBelowTile(b);
 	if (tile >= 0)
 	{
-		if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+		if ( (symbol == 0 && (tile == type)) || (symbol == 1 && (tile != type)) )
 		{
 			res = 0;
 			goto exit;
@@ -331,7 +331,7 @@ static int validSymbols(int type, int b)
 	tile = getLeftTile(b);
 	if (tile >= 0)
 	{
-		if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+		if ( (symbol == 0 && (tile == type)) || (symbol == 1 && (tile != type)) )
 		{
 			res = 0;
 			goto exit;
@@ -342,7 +342,7 @@ static int validSymbols(int type, int b)
 	tile = getRightTile(b);
 	if (tile >= 0)
 	{
-		if ( (symbol == 1 && (tile == type)) || (symbol == 2 && (tile != type)) )
+		if ( (symbol == 0 && (tile == type)) || (symbol == 1 && (tile != type)) )
 			res = 0;
 	}
 
