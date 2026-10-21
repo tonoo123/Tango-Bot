@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "tango-rules.h"
 
 /**
@@ -10,11 +11,11 @@
  *            
  * 0 0 0 0 0 0
  *            
- * 1 1 0 0x0 0
+ * m m 0 0x0 0
  *            
  * 0 0 0=0 0 0
  *         = x
- * 0 1 0 1 0 0
+ * 0 m 0 m 0 0
  */
 
 int main(void)
@@ -24,6 +25,14 @@ int main(void)
 	startingTileAdd(0, 4);
 	startingTileAdd(0, 16);
 	startingTileAdd(0, 17);
+
+	assert(startingTileContains(17) == 1);
+	assert(getTile(17) == 0);
+	assert(getAboveTile(11) == 0);
+	assert(getBelowTile(23) == 0);
+	assert(getLeftTile(16)  == 0);
+	assert(getRightTile(17) == 0);
+	
 	// Add horizontal symbols
 	horizontalSymbolAdd(1, 8);
 	horizontalSymbolAdd(0, 13);
@@ -35,7 +44,23 @@ int main(void)
 	verticalSymbolAdd(1, 1);
 	verticalSymbolAdd(1, 26);
 
-	printBoard();
+	assert(getAboveSymbol(0) == 0);
+	assert(getBelowSymbol(6) == 0);
+	assert(getLeftSymbol(8)  == 1);
+	assert(getRightSymbol(9) == 1);
+
+	assert(isValid(0, 1) == 1);
+	assert(isValid(1, 1) == 1);
+	assert(isValid(0, 3) == 0);
+	assert(isValid(1, 3) == 1);
+
+	updateBitBoardList();
+
+	for (int i=0; i < 12; i++)
+	{
+		printf("bboard: %llx\n",bbs[i]);
+	}
+
 
 	return 0;
 }

@@ -17,7 +17,7 @@ uint64_t SUNS						= 0x0000000000000000ULL;
 uint64_t SUNS_MOONS_COMBINED		= 0x0000000000000000ULL;
 uint64_t STARTING_SET				= 0x0000000000000000ULL;
 
-uint64_t bbs[12];
+uint64_t bbs[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
 
 static inline uint64_t isLeftCol(int b) { return LEFT_EDGE & (1ULL << b); };
 static inline uint64_t isRightCol(int b) { return RIGHT_EDGE & (1ULL << b); };
@@ -75,7 +75,7 @@ exit:
 }
 
 /**
- * Checks for and returns the horizontal dividor symbol above a tile.
+ * Checks for and returns the vertical dividor symbol above a tile.
  * @param b Bit position.
  * @return -1 for no symbol,
  * 		    0 for cross,
@@ -420,7 +420,7 @@ int removePiece(int b)
 	return res;
 }
 
-uint64_t *getBBs()
+void updateBitBoardList()
 {
 	bbs[0]  = LEFT_EDGE;
 	bbs[1]  = RIGHT_EDGE;
@@ -434,7 +434,6 @@ uint64_t *getBBs()
 	bbs[9]  = SUNS;
 	bbs[10] = SUNS_MOONS_COMBINED;
 	bbs[11] = STARTING_SET;
-	return bbs;
 }
 
 void printVerticalSymbols(int msb)

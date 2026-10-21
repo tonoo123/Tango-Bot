@@ -20,4 +20,4 @@ int isValid(int type, int b);
 int placePiece(int type, int b);
 int removePiece(int b);
 void printBoard();
-uint64_t *getBBs();
+void updateBitBoardList();
