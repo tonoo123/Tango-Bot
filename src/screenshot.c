@@ -7,20 +7,20 @@ HWND hwndScreen;
 HDC hdcScreen;
 HDC hdcMem;
 
-int width;
-int height;
+static int width;
+static int height;
 
 HBITMAP hBitmap;
 BITMAPINFO bmi;
 unsigned char *pixelBuf;
 
-void initHandles_Bitmap()
+void initHandles_Bitmap(int w, int h)
 {
 	hwndScreen = GetDesktopWindow();
 	hdcScreen = GetDC(hwndScreen);
 	hdcMem = CreateCompatibleDC(hdcScreen);
-	width = GetSystemMetrics(SM_CXSCREEN);
-	height = GetSystemMetrics(SM_CYSCREEN);
+	width = w;
+	height = h;
 	hBitmap = CreateCompatibleBitmap(hdcScreen, width, height);
 	SelectObject(hdcMem, hBitmap);
 	// bitmap format
@@ -32,9 +32,10 @@ void initHandles_Bitmap()
 	bmi.bmiHeader.biCompression = BI_RGB;
 }
 
-unsigned char* capture()
+unsigned char* capture(int screenx, int screeny)
 {
-	BitBlt(hdcMem, 0, 0, width, height, hdcScreen, 0, 0, SRCCOPY);
+	// args: handle, screen x, screen y, width, height, handle, dest x, dest y, raster-op
+	BitBlt(hdcMem, screenx, screeny, width, height, hdcScreen, 0, 0, SRCCOPY);
 	int bufSize = width * height * 4;
 	pixelBuf = (unsigned char*)malloc(bufSize);
 	GetDIBits(hdcScreen, hBitmap, 0, height, pixelBuf, &bmi, DIB_RGB_COLORS);
