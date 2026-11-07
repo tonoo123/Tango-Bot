@@ -1,6 +1,12 @@
 #include <stdio.h>
-#include<windows.h>
+#include <windows.h>
 #include "screenshot.h"
+
+// Purely to get rid of VScode undefined error, code will run perfectly fine without it
+#ifndef DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+    DECLARE_HANDLE(DPI_AWARENESS_CONTEXT);
+    #define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 ((DPI_AWARENESS_CONTEXT)-4)
+#endif
 
 int width = 0;
 int height = 0;

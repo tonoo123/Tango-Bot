@@ -3,28 +3,66 @@
 #include <assert.h>
 #include "tango-rules.h"
 
+#define MOON_BLUE_THRESHOLD 150
+#define SUN_RED_THRESHOLD   150
+#define VERTICAL_OFFSET      86
+#define HORIZONTAL_OFFSET    86
+#define MOON_TILE             0
+#define SUN_TILE              1
+#define EMPTY_TILE           -1
+#define EQUAL_SYMBOL          1
+#define CROSS_SYMBOL          0
+
 /**
- * Test tango puzzle: (0 is empty, 1 is moon, 2 is sun)
- * 0 0=0x0 0 0
- *       =    
- * 0 0 0 0 0=0
- *            
+ * Test tango puzzle
  * 0 0 0 0 0 0
  *            
- * m m 0 0x0 0
+ * 0 0 0 0 0 m
+ *     =      
+ * 0 s 0 m s 0
+ *           x
+ * 0 0 0 0 0 0
+ *   =        
+ * s 0 0x0 0 0
  *            
- * 0 0 0=0 0 0
- *         = x
- * 0 m 0 m 0 0
+ * s 0 0 0 0 0
  */
 
 int main(void)
 {
+	// Add horizontal symbols
+	horizontalSymbolAdd(CROSS_SYMBOL, 8);
+
+	// Add vertical symbols
+	verticalSymbolAdd(EQUAL_SYMBOL, 10);
+	verticalSymbolAdd(CROSS_SYMBOL, 12);
+	verticalSymbolAdd(EQUAL_SYMBOL, 21);
+
 	// Add pieces
-	startingTileAdd(0, 2);
-	startingTileAdd(0, 4);
-	startingTileAdd(0, 16);
-	startingTileAdd(0, 17);
+	startingTileAdd(MOON_TILE,  0);
+	startingTileAdd(SUN_TILE,   1);
+	startingTileAdd(MOON_TILE,  2);
+	startingTileAdd(MOON_TILE,  3);
+	startingTileAdd(SUN_TILE,   4);
+	startingTileAdd(SUN_TILE,   5); // Actual starter
+	startingTileAdd(SUN_TILE,   6);
+	startingTileAdd(MOON_TILE,  7);
+	startingTileAdd(MOON_TILE,  8);
+	startingTileAdd(SUN_TILE,   9);
+	startingTileAdd(MOON_TILE, 10);
+	startingTileAdd(SUN_TILE,  11); // Actual starter
+	startingTileAdd(SUN_TILE,  12);
+	startingTileAdd(MOON_TILE, 13);
+	startingTileAdd(SUN_TILE,  14);
+	startingTileAdd(SUN_TILE,  15);
+	startingTileAdd(MOON_TILE, 16);
+	startingTileAdd(MOON_TILE, 17);
+	startingTileAdd(SUN_TILE,  19); // Actual starter
+	startingTileAdd(SUN_TILE,  22); // Actual starter
+	startingTileAdd(MOON_TILE, 20); // Actual starter
+	startingTileAdd(MOON_TILE, 24); // Actual starter
+
+	// Solver goes from left->right, top->bottom (MSB->LSB)
 
 	assert(startingTileContains(17) == 1);
 	assert(getTile(17) == 0);
@@ -32,17 +70,6 @@ int main(void)
 	assert(getBelowTile(23) == 0);
 	assert(getLeftTile(16)  == 0);
 	assert(getRightTile(17) == 0);
-	
-	// Add horizontal symbols
-	horizontalSymbolAdd(1, 8);
-	horizontalSymbolAdd(0, 13);
-	horizontalSymbolAdd(1, 24);
-	horizontalSymbolAdd(0, 32);
-	horizontalSymbolAdd(1, 33);
-	// Add vertical symbols
-	verticalSymbolAdd(0, 0);
-	verticalSymbolAdd(1, 1);
-	verticalSymbolAdd(1, 26);
 
 	assert(getAboveSymbol(0) == 0);
 	assert(getBelowSymbol(6) == 0);

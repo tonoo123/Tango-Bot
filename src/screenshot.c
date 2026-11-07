@@ -26,7 +26,7 @@ void initHandles_Bitmap(int w, int h)
 	// bitmap format
 	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bmi.bmiHeader.biWidth = width;
-	bmi.bmiHeader.biHeight = height; // Positive height means bottom-to-top layout
+	bmi.bmiHeader.biHeight = -height; // Positive height means bottom-to-top layout
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biBitCount = 32;   // 4 bytes per pixel (B, G, R, A)
 	bmi.bmiHeader.biCompression = BI_RGB;
@@ -38,7 +38,7 @@ unsigned char* capture(int screenx, int screeny)
 	BitBlt(hdcMem, screenx, screeny, width, height, hdcScreen, 0, 0, SRCCOPY);
 	int bufSize = width * height * 4;
 	pixelBuf = (unsigned char*)malloc(bufSize);
-	GetDIBits(hdcScreen, hBitmap, 0, height, pixelBuf, &bmi, DIB_RGB_COLORS);
+	GetDIBits(hdcMem, hBitmap, 0, height, pixelBuf, &bmi, DIB_RGB_COLORS);
 	return pixelBuf;
 }
 

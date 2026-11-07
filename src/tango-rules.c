@@ -234,64 +234,105 @@ void verticalSymbolAdd(int type, int b)
 		VERTICAL_DIVIDERS_CROSS |= (1ULL << b);
 }
 
+// static int validRow(int type, int c, int b)
+// {
+// 	uint64_t like = SUNS;
+// 	int res = 1;
+// 	if (!type)
+// 		like = MOONS;
+
+// 	uint64_t nextTile		= (like >> (b+1)) & 1;
+// 	uint64_t prevTile		= (like >> (b-1)) & 1;
+// 	uint64_t tileAfterNext	= (like >> (b+2)) & 1;
+// 	uint64_t tileBeforePrev	= (like >> (b-2)) & 1;
+
+// 	// uint64_t range = (like << (58 - (30 - (b-c)))) >> 58;
+// 	uint64_t range = (like >> (b-c)) & 0x3F; // 0x3F: all 1 row
+// 	int sum = __builtin_popcountll(range);
+
+// 	if (
+// 			(c > 1 && tileBeforePrev && prevTile)
+// 		||	(c > 0 && c < 5 && nextTile && prevTile)
+// 		||	(c < 4 && tileAfterNext && nextTile)
+// 		||	(sum == 3)
+// 	)
+// 	{
+// 		res = 0;
+// 	}
+
+// 	return res;
+// }
+
 static int validRow(int type, int c, int b)
 {
-	uint64_t like = SUNS;
-	int res = 1;
-	if (!type)
-		like = MOONS;
+	uint64_t like = type ? SUNS : MOONS;
+	int r = b - c;                          /* first bit of this row */
 
-	uint64_t nextTile		= (like >> (b+1)) & 1;
-	uint64_t prevTile		= (like >> (b-1)) & 1;
-	uint64_t tileAfterNext	= (like >> (b+2)) & 1;
-	uint64_t tileBeforePrev	= (like >> (b-2)) & 1;
+	/* Balance: at most 3 of each symbol per row */
+	if (__builtin_popcountll((like >> r) & 0x3F) >= 3)
+		return 0;
 
-	uint64_t range = (like << (58 - (30 - (b-c)))) >> 58;
-	int sum = __builtin_popcountll(range);
+	/* No three consecutive: check every window that would contain b */
+	if (c >= 2 && ((like >> (b - 2)) & 0x3) == 0x3)          /* b-2, b-1 */
+		return 0;
+	if (c >= 1 && c <= 4 && ((like >> (b - 1)) & 0x5) == 0x5) /* b-1, b+1 */
+		return 0;
+    if (c <= 3 && ((like >> b) & 0x6) == 0x6)                /* b+1, b+2 */
+		return 0;
 
-	if (
-			(c > 1 && tileBeforePrev && prevTile)
-		||	(c > 0 && c < 5 && nextTile && prevTile)
-		||	(c < 4 && tileAfterNext && nextTile)
-		||	(sum == 3)
-	)
-	{
-		res = 0;
-	}
-
-	return res;
+	return 1;
 }
 
+// static int validCol(int type, int r, int c, int b)
+// {
+// 	uint64_t like = SUNS;
+// 	int res = 1;
+// 	if (!type)
+// 		like = MOONS;
+
+// 	uint64_t aboveTile		= (like >> (b +6)) & 1;
+// 	uint64_t belowTile		= (like >> (b -6)) & 1;
+// 	uint64_t tileAboveAbove	= (like >> (b+12)) & 1;
+// 	uint64_t tileBelowBelow	= (like >> (b-12)) & 1;
+// 	int sum =
+// 		  ((like >> c)      & 1)
+// 		+ ((like >> (c+6))  & 1)
+// 		+ ((like >> (c+12)) & 1)
+// 		+ ((like >> (c+18)) & 1)
+// 		+ ((like >> (c+24)) & 1)
+// 		+ ((like >> (c+32)) & 1);
+	
+// 		if (
+// 				(r > 1 && belowTile && tileBelowBelow)
+// 			||	(r > 0 && r < 5 && belowTile && aboveTile)
+// 			||	(r < 5 && aboveTile && tileAboveAbove)
+// 			||	(sum == 3)
+// 		)
+// 		{
+// 			res = 0;
+// 		}
+
+// 	return res;
+// }
+
+/* b == c + 6*r, so r and c are redundant with b; keep b for convenience. */
 static int validCol(int type, int r, int c, int b)
 {
-	uint64_t like = SUNS;
-	int res = 1;
-	if (!type)
-		like = MOONS;
+    uint64_t like = type ? SUNS : MOONS;
 
-	uint64_t aboveTile		= (like >> (b +6)) & 1;
-	uint64_t belowTile		= (like >> (b -6)) & 1;
-	uint64_t tileAboveAbove	= (like >> (b+12)) & 1;
-	uint64_t tileBelowBelow	= (like >> (b-12)) & 1;
-	int sum =
-		  ((like >> c)      & 1)
-		+ ((like >> (c+6))  & 1)
-		+ ((like >> (c+12)) & 1)
-		+ ((like >> (c+18)) & 1)
-		+ ((like >> (c+24)) & 1)
-		+ ((like >> (c+32)) & 1);
-	
-		if (
-				(r > 1 && belowTile && tileBelowBelow)
-			||	(r > 0 && r < 5 && belowTile && aboveTile)
-			||	(r < 5 && aboveTile && tileAboveAbove)
-			||	(sum == 3)
-		)
-		{
-			res = 0;
-		}
+    /* Balance: at most 3 of this symbol in the column (bits c, c+6, ..., c+30) */
+    if (__builtin_popcountll((like >> c) & 0x41041041ULL) >= 3)
+        return 0;
 
-	return res;
+    /* No three consecutive vertically; check every window containing b */
+    if (r >= 2 && ((like >> (b - 12)) & 0x41) == 0x41)        /* r-2, r-1 */
+        return 0;
+    if (r >= 1 && r <= 4 && ((like >> (b - 6)) & 0x1001) == 0x1001) /* r-1, r+1 */
+        return 0;
+    if (r <= 3 && ((like >> b) & 0x1040) == 0x1040)           /* r+1, r+2 */
+        return 0;
+
+    return 1;
 }
 
 /**
@@ -358,23 +399,36 @@ exit:
  *		  -1 if attempting to edit the starting set,
  *		   1 if the placement is valid.
  */
+// int isValid(int type, int b)
+// {
+// 	int res = 1;
+
+// 	if (startingTileContains(b))
+// 	{
+// 		res = -1;
+// 		goto exit;
+// 	}
+
+// 	int col = b%6;
+// 	int row = b/6;
+// 	if (!validRow(type, col, b) || !validCol(type, row, col, b) || !validSymbols(type, b))
+// 		res = 0;
+
+// exit:
+// 	return res;
+// }
+
 int isValid(int type, int b)
 {
-	int res = 1;
+    if (startingTileContains(b))
+        return 0;                    /* see note below */
 
-	if (startingTileContains(b))
-	{
-		res = -1;
-		goto exit;
-	}
+    int col = b % 6;
+    int row = b / 6;                 /* row index 0..5 */
 
-	int col = b%6;
-	int row = b-col;
-	if (!validRow(type, col, b) || !validCol(type, row, col, b) || !validSymbols(type, b))
-		res = 0;
-
-exit:
-	return res;
+    return validRow(type, col, b)
+        && validCol(type, row, col, b)
+        && validSymbols(type, b);
 }
 
 /**
